@@ -169,7 +169,7 @@ class TextyWindow(Adw.ApplicationWindow):
         if self.buffer_modified:
             self.prompt_save_changes("new")
         else:
-            self.create_new_file(self)
+            self.create_new_file()
     
     def create_new_file(self):
         self.text_view.get_buffer().set_text("")
@@ -235,6 +235,8 @@ class TextyWindow(Adw.ApplicationWindow):
                 self.load_file(file)
                 self.title.set_title(f"{file.get_basename()}")
                 self.title.set_subtitle(file.get_path())
+                self.buffer_modified = False
+                self.buffer.set_modified(False)
             else:
                 self.show_toast("Open operation cancelled")
         except GLib.Error as error:
