@@ -7,6 +7,20 @@ gi.require_version('Adw', '1')
 from gi.repository import Gtk, Adw, Gio, Gdk, GLib
 import os
 
+MENU_XML="""
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <menu id="hamburger-menu">
+    <section>
+      <item>
+        <attribute name="action">win.about</attribute>
+        <attribute name="label" translatable="yes">About texty</attribute>
+      </item>
+    </section>
+  </menu>
+</interface>
+"""
+
 class TextyWindow(Adw.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -14,6 +28,11 @@ class TextyWindow(Adw.ApplicationWindow):
 
         self.set_default_size(1000, 600)
         self.set_title("texty")
+
+        resources = Gio.Resource.load('./resources.gresource')
+        Gio.resources_register(resources)
+        icon_exists = resources.lookup_data('/texty/texty.svg', Gio.ResourceLookupFlags.NONE)
+        print(f"Icon exists: {icon_exists is not None}")
 
         header = Adw.HeaderBar()
 
@@ -59,14 +78,25 @@ class TextyWindow(Adw.ApplicationWindow):
         self.title.set_subtitle("a minimal text editor")
         header.set_title_widget(self.title)
 
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        box.set_homogeneous(False)
+        hamburger_menu = Gtk.MenuButton.new()
+        hamburger_menu.set_icon_name("open-menu-symbolic")
+        menu = Gtk.Builder.new_from_string(MENU_XML, -1).get_object("hamburger-menu")
+        hamburger_menu.set_menu_model(menu)
+        
+        about_action = Gio.SimpleAction.new("about", None) # look at MENU_XML win.about
+        about_action.connect("activate", self.on_about_action_activated)
+        self.add_action(about_action) # (self window) == win in MENU_XML
+        
+        header.pack_end(hamburger_menu)
+
+        self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.box.set_homogeneous(False)
 
         self.toast_overlay = Adw.ToastOverlay()
         self.set_content(self.toast_overlay)
-        self.toast_overlay.set_child(box)
+        self.toast_overlay.set_child(self.box)
 
-        box.append(header)
+        self.box.append(header)
 
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
@@ -92,11 +122,23 @@ class TextyWindow(Adw.ApplicationWindow):
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
 
-        box.append(scrolled_window)
-
+        self.box.append(scrolled_window)
+        
         self.buffer = self.text_view.get_buffer()
         self.buffer.connect("changed", self.on_buffer_changed)
         self.buffer_modified = False # Flag to track buffer changes
+    
+    def on_about_action_activated(self, action, param=None):
+        image = Gtk.Image.new_from_resource("/texty/texty.svg")
+        self.box.append(image)
+        about_dialog = Adw.AboutDialog.new()
+        about_dialog.set_application_name("texty")
+        about_dialog.set_developers(["Craig Foote <CraigFoote@gmail.com>"])
+        about_dialog.set_developer_name("Another fine mess by Footeware.ca")
+        about_dialog.set_copyright("©︎2024 Craig Foote")
+        about_dialog.set_application_icon("/texty/texty.svg")
+        about_dialog.present()
+        print(about_dialog.get_application_icon())
     
     def on_buffer_changed(self, buffer):
         self.buffer_modified = True
