@@ -1,6 +1,7 @@
 import sys
 import gi
 
+gi.require_version('Gio', '2.0')
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 
@@ -11,6 +12,32 @@ MENU_XML="""
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <menu id="hamburger-menu">
+    <section>
+      <item>
+        <attribute name="action">win.toggle_wrap</attribute>
+        <attribute name="label" translatable="yes">Wrap Text</attribute>
+      </item>
+      <submenu>
+        <attribute name="label" translatable="yes">Font Size</attribute>
+        <section>
+          <item>
+            <attribute name="action">win.font_size</attribute>
+            <attribute name="target" type="i">14</attribute>
+            <attribute name="label" translatable="no">14px</attribute>
+          </item>
+          <item>
+            <attribute name="action">win.font_size</attribute>
+            <attribute name="target" type="i">18</attribute>
+            <attribute name="label" translatable="no">18px</attribute>
+          </item>
+          <item>
+            <attribute name="action">win.font_size</attribute>
+            <attribute name="target" type="i">22</attribute>
+            <attribute name="label" translatable="no">22px</attribute>
+          </item>
+        </section>
+      </submenu>
+    </section>
     <section>
       <item>
         <attribute name="action">win.about</attribute>
@@ -29,10 +56,10 @@ class TextyWindow(Adw.ApplicationWindow):
         self.set_default_size(1000, 600)
         self.set_title("texty")
 
-        resources = Gio.Resource.load('./resources.gresource')
-        Gio.resources_register(resources)
-        icon_exists = resources.lookup_data('/texty/texty.svg', Gio.ResourceLookupFlags.NONE)
-        print(f"Icon exists: {icon_exists is not None}")
+        # add path to icons to default icon theme
+        icon_dir = os.path.join(os.path.dirname(__file__), 'data', 'icons', 'hicolor', 'scalable', 'apps')
+        icon_theme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
+        icon_theme.add_search_path(icon_dir)
 
         header = Adw.HeaderBar()
 
@@ -69,7 +96,7 @@ class TextyWindow(Adw.ApplicationWindow):
         self.add_action(new_window_action)
         section.append_item(new_window_menu_item)
         menu_model.append_section(None, section)
-                
+        
         save_button.set_menu_model(menu_model)
         header.pack_start(save_button)
 
@@ -86,7 +113,19 @@ class TextyWindow(Adw.ApplicationWindow):
         about_action = Gio.SimpleAction.new("about", None) # look at MENU_XML win.about
         about_action.connect("activate", self.on_about_action_activated)
         self.add_action(about_action) # (self window) == win in MENU_XML
-        
+
+        toggle_wrap_action = Gio.SimpleAction.new_stateful("toggle_wrap", 
+                                                           None, 
+                                                           GLib.Variant.new_boolean(True)) # look at MENU_XML win.toggle_wrap
+        toggle_wrap_action.connect("activate", self.on_toggle_wrap_action_activated)
+        self.add_action(toggle_wrap_action) # (self window) == win in MENU_XML
+
+        font_size_action = Gio.SimpleAction.new_stateful(
+            "font_size", GLib.VariantType.new("i"), GLib.Variant.new_int32(18)
+        )
+        font_size_action.connect("change-state", self.on_font_size_action_changed)
+        self.add_action(font_size_action)
+
         header.pack_end(hamburger_menu)
 
         self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -115,7 +154,7 @@ class TextyWindow(Adw.ApplicationWindow):
         scrolled_window.set_child(self.text_view)
 
         style_provider = Gtk.CssProvider()
-        style_provider.load_from_string("textview {font-size: 18px; font-family: monospace;}")
+        style_provider.load_from_string("textview {font-size: 18px;}")
         Gtk.StyleContext.add_provider_for_display(
             Gdk.Display.get_default(),
             style_provider,
@@ -128,17 +167,36 @@ class TextyWindow(Adw.ApplicationWindow):
         self.buffer.connect("changed", self.on_buffer_changed)
         self.buffer_modified = False # Flag to track buffer changes
     
+    def on_font_size_action_changed(self, action, value):
+        font_size = value.get_int32()
+        action.set_state(value)
+        css = f"textview {{font-size: {font_size}px;}}"
+        css_provider = Gtk.CssProvider()
+        css_provider.load_from_data(css.encode())
+        Gtk.StyleContext.add_provider_for_display(
+            Gdk.Display.get_default(),
+            css_provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+    
+    def on_toggle_wrap_action_activated(self, action, param=None):
+        old_state = action.get_state()
+        new_state = not old_state.get_boolean()
+        action.set_state(GLib.Variant.new_boolean(new_state))
+
+        if new_state:
+            self.text_view.set_wrap_mode(Gtk.WrapMode.WORD)
+        else:
+            self.text_view.set_wrap_mode(Gtk.WrapMode.NONE)
+            
     def on_about_action_activated(self, action, param=None):
-        image = Gtk.Image.new_from_resource("/texty/texty.svg")
-        self.box.append(image)
         about_dialog = Adw.AboutDialog.new()
         about_dialog.set_application_name("texty")
         about_dialog.set_developers(["Craig Foote <CraigFoote@gmail.com>"])
         about_dialog.set_developer_name("Another fine mess by Footeware.ca")
         about_dialog.set_copyright("©︎2024 Craig Foote")
-        about_dialog.set_application_icon("/texty/texty.svg")
+        about_dialog.set_application_icon("texty")
         about_dialog.present()
-        print(about_dialog.get_application_icon())
     
     def on_buffer_changed(self, buffer):
         self.buffer_modified = True
@@ -149,12 +207,6 @@ class TextyWindow(Adw.ApplicationWindow):
     def show_toast(self, message):
         toast = Adw.Toast.new(message)
         self.toast_overlay.add_toast(toast)
-    
-    def save_file(self):
-        if self.current_file:
-            return self.save_to_file(self, self.current_file)
-        else:
-            return self.save_as()
     
     def save_to_file(self, file):
         buffer = self.text_view.get_buffer()
@@ -308,6 +360,7 @@ class TextyApp(Adw.Application):
         self.set_accels_for_action("win.save", ["<Control>s"])
         self.set_accels_for_action("win.save_as", ["<Control><Shift>s"])
         self.set_accels_for_action("win.new_window", ["<Control><Shift>n"])
+        self.set_accels_for_action("win.toggle_wrap", ["<Control>w"])
 
     def on_activate(self, app):
         """
