@@ -83,6 +83,9 @@ class TextyWindow(Adw.ApplicationWindow):
         super().__init__(*args, **kwargs)
         __gtype_name__ = "TextyWindow"
 
+        # preferences
+        self.settings = Gio.Settings.new("ca.footeware.py.texty")
+
         self.set_default_size(1000, 600)
         self.set_title("texty")
 
@@ -148,6 +151,7 @@ class TextyWindow(Adw.ApplicationWindow):
                                                            None, 
                                                            GLib.Variant.new_boolean(True)) # look at MENU_XML win.toggle_wrap
         toggle_wrap_action.connect("activate", self.on_toggle_wrap_action_activated)
+        toggle_wrap_action.set_state(GLib.Variant.new_boolean(self.settings.get_boolean("wrap-mode")))
         self.add_action(toggle_wrap_action) # (self window) == win in MENU_XML
 
         font_size_action = Gio.SimpleAction.new_stateful(
@@ -196,6 +200,15 @@ class TextyWindow(Adw.ApplicationWindow):
         self.buffer = self.text_view.get_buffer()
         self.buffer.connect("changed", self.on_buffer_changed)
         self.buffer_modified = False # Flag to track buffer changes
+
+        self.load_wrap_mode()
+    
+    def load_wrap_mode(self):
+        wrap_mode = self.settings.get_boolean("wrap-mode")
+        if wrap_mode:
+            self.text_view.set_wrap_mode(Gtk.WrapMode.WORD)
+        else:
+            self.text_view.set_wrap_mode(Gtk.WrapMode.NONE)
     
     def on_font_size_action_changed(self, action, value):
         font_size = value.get_int32()
@@ -218,6 +231,9 @@ class TextyWindow(Adw.ApplicationWindow):
             self.text_view.set_wrap_mode(Gtk.WrapMode.WORD)
         else:
             self.text_view.set_wrap_mode(Gtk.WrapMode.NONE)
+
+        # Save the wrap mode to prefs
+        self.settings.set_boolean("wrap-mode", new_state)
             
     def on_about_action_activated(self, action, param=None):
         about_dialog = Adw.AboutDialog.new()
