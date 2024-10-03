@@ -27,13 +27,43 @@ MENU_XML="""
           </item>
           <item>
             <attribute name="action">win.font_size</attribute>
+            <attribute name="target" type="i">16</attribute>
+            <attribute name="label" translatable="no">16px</attribute>
+          </item>
+          <item>
+            <attribute name="action">win.font_size</attribute>
             <attribute name="target" type="i">18</attribute>
             <attribute name="label" translatable="no">18px</attribute>
           </item>
           <item>
             <attribute name="action">win.font_size</attribute>
+            <attribute name="target" type="i">20</attribute>
+            <attribute name="label" translatable="no">20px</attribute>
+          </item>
+          <item>
+            <attribute name="action">win.font_size</attribute>
             <attribute name="target" type="i">22</attribute>
             <attribute name="label" translatable="no">22px</attribute>
+          </item>
+          <item>
+            <attribute name="action">win.font_size</attribute>
+            <attribute name="target" type="i">24</attribute>
+            <attribute name="label" translatable="no">24px</attribute>
+          </item>
+          <item>
+            <attribute name="action">win.font_size</attribute>
+            <attribute name="target" type="i">26</attribute>
+            <attribute name="label" translatable="no">26px</attribute>
+          </item>
+          <item>
+            <attribute name="action">win.font_size</attribute>
+            <attribute name="target" type="i">28</attribute>
+            <attribute name="label" translatable="no">28px</attribute>
+          </item>
+          <item>
+            <attribute name="action">win.font_size</attribute>
+            <attribute name="target" type="i">30</attribute>
+            <attribute name="label" translatable="no">30px</attribute>
           </item>
         </section>
       </submenu>
