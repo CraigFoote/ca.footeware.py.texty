@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="ca.footeware.py.texty" path="/ca/footeware/py/texty/">
+    <key name="wrap-mode" type="b">
+      <default>true</default>
+      <summary>Wrap mode</summary>
+      <description>Whether to wrap text in the text view</description>
+    </key>
+  </schema>
+</schemalist>
