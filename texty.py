@@ -86,8 +86,10 @@ class TextyWindow(Adw.ApplicationWindow):
         # preferences
         self.settings = Gio.Settings.new("ca.footeware.py.texty")
 
-        self.set_default_size(1000, 600)
-        self.set_title("texty")
+        # set default window size
+        width = self.settings.get_int("window-width")
+        height = self.settings.get_int("window-height")
+        self.set_default_size(width, height)
 
         # add path to icons to default icon theme
         icon_dir = os.path.join(os.path.dirname(__file__), 'data', 'icons', 'hicolor', 'scalable', 'apps')
@@ -154,10 +156,13 @@ class TextyWindow(Adw.ApplicationWindow):
         toggle_wrap_action.set_state(GLib.Variant.new_boolean(self.settings.get_boolean("wrap-mode")))
         self.add_action(toggle_wrap_action) # (self window) == win in MENU_XML
 
+        font_size = self.settings.get_int("font-size")
+        self.set_font_size(font_size)
         font_size_action = Gio.SimpleAction.new_stateful(
-            "font_size", GLib.VariantType.new("i"), GLib.Variant.new_int32(18)
+            "font_size", GLib.VariantType.new("i"), GLib.Variant.new_int32(font_size)
         )
         font_size_action.connect("change-state", self.on_font_size_action_changed)
+        font_size_action.set_state(GLib.Variant.new_int32(font_size))
         self.add_action(font_size_action)
 
         header.pack_end(hamburger_menu)
@@ -186,15 +191,6 @@ class TextyWindow(Adw.ApplicationWindow):
         self.current_file = None  # Store the currently open file
 
         scrolled_window.set_child(self.text_view)
-
-        style_provider = Gtk.CssProvider()
-        style_provider.load_from_string("textview {font-size: 18px;}")
-        Gtk.StyleContext.add_provider_for_display(
-            Gdk.Display.get_default(),
-            style_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        )
-
         self.box.append(scrolled_window)
         
         self.buffer = self.text_view.get_buffer()
@@ -202,7 +198,17 @@ class TextyWindow(Adw.ApplicationWindow):
         self.buffer_modified = False # Flag to track buffer changes
 
         self.load_wrap_mode()
+        self.connect("close-request", self.on_close_request)
+
+        self.text_view.grab_focus()
     
+    def on_close_request(self, window):
+        width = self.get_width()
+        height = self.get_height()
+        self.settings.set_int("window-width", width)
+        self.settings.set_int("window-height", height)
+        return False  # Return False to allow the window to close
+                    
     def load_wrap_mode(self):
         wrap_mode = self.settings.get_boolean("wrap-mode")
         if wrap_mode:
@@ -213,6 +219,11 @@ class TextyWindow(Adw.ApplicationWindow):
     def on_font_size_action_changed(self, action, value):
         font_size = value.get_int32()
         action.set_state(value)
+        self.set_font_size(font_size)
+        # save to pref
+        self.settings.set_int("font-size", font_size)
+    
+    def set_font_size(self, font_size):
         css = f"textview {{font-size: {font_size}px;}}"
         css_provider = Gtk.CssProvider()
         css_provider.load_from_data(css.encode())
@@ -346,6 +357,7 @@ class TextyWindow(Adw.ApplicationWindow):
     def execute_next_action(self, next_action):
         if next_action == "new":
             self.create_new_file()
+            self.text_view.grab_focus()
         elif next_action == "open":
             self.open_file(self)
     
