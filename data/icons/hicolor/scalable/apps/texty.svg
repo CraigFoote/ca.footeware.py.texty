@@ -30,15 +30,15 @@
     <color-profile
        name="sRGB"
        xlink:href="file:///app/share/color/icc/colord/sRGB.icc"
-       id="color-profile4" />
+       id="color-profile5" />
     <color-profile
        name="FOGRA28L-Web-Coated"
        xlink:href="file:///app/share/color/icc/colord/FOGRA28L_webcoated.icc"
-       id="color-profile3" />
+       id="color-profile4" />
     <color-profile
        name="PAL-SECAM-RGB"
        xlink:href="file:///app/share/color/icc/colord/PAL-RGB.icc"
-       id="color-profile5" />
+       id="color-profile6" />
     <linearGradient
        y2="236"
        x2="96"
@@ -125,7 +125,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="5.6568545"
-     inkscape:cx="70.180345"
+     inkscape:cx="70.268733"
      inkscape:cy="46.669045"
      inkscape:current-layer="layer4"
      showgrid="false"
@@ -380,18 +380,13 @@
      inkscape:groupmode="layer"
      id="layer4"
      inkscape:label="App Icon 1">
-    <g
-       id="g3"
-       style="display:inline;enable-background:new"
-       transform="translate(0.2609188,-170.5576)">
-      <path
-         id="secondary"
-         d="m 109.57031,191.11788 a 20.519828,20.457756 0 0 0 -29.03555,0 l -12.670992,12.63266 a 5.1299571,5.1144392 0 0 0 0,7.26251 l 21.751014,21.68522 a 5.1299571,5.1144392 0 0 0 7.284536,0 l 12.670992,-12.37695 a 20.519828,20.457756 0 0 0 0,-29.20344 z"
-         style="fill:#3584e4;stroke:#808080;stroke-width:1.53666;stroke-dasharray:none;stroke-opacity:1" />
-      <path
-         id="primary"
-         d="M 82.432841,239.85848 60.681827,218.17326 a 5.1299571,5.1144392 0 0 0 -7.284539,0 L 15.07651,256.37813 a 5.1299571,5.1144392 0 0 0 -1.487686,3.63125 v 21.68522 a 5.1299571,5.1144392 0 0 0 5.129958,5.11443 h 21.751016 a 5.1299571,5.1144392 0 0 0 3.898766,-1.48319 l 38.320777,-38.20485 a 5.1299571,5.1144392 0 0 0 -0.25646,-7.26251 z"
-         style="fill:#000000;stroke:#808080;stroke-width:1.53666;stroke-dasharray:none;stroke-opacity:1" />
-    </g>
+    <path
+       id="secondary"
+       d="m 109.83123,20.56028 a 20.519828,20.457756 0 0 0 -29.035551,0 L 68.124687,33.19294 a 5.1299571,5.1144392 0 0 0 0,7.26251 l 21.751014,21.68522 a 5.1299571,5.1144392 0 0 0 7.284536,0 L 109.83123,49.76372 a 20.519828,20.457756 0 0 0 0,-29.20344 z"
+       style="fill:#6400b0;stroke:#808080;stroke-width:1.53666;stroke-dasharray:none;stroke-opacity:1;fill-opacity:1" />
+    <path
+       id="primary"
+       d="M 82.69376,69.30088 60.942746,47.61566 a 5.1299571,5.1144392 0 0 0 -7.284539,0 L 15.337429,85.82053 a 5.1299571,5.1144392 0 0 0 -1.487686,3.63125 V 111.137 a 5.1299571,5.1144392 0 0 0 5.129958,5.11443 h 21.751016 a 5.1299571,5.1144392 0 0 0 3.898766,-1.48319 L 82.95026,76.56339 A 5.1299571,5.1144392 0 0 0 82.6938,69.30088 Z"
+       style="fill:#000000;stroke:#808080;stroke-width:1.53666;stroke-dasharray:none;stroke-opacity:1" />
   </g>
 </svg>

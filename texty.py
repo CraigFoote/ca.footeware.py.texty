@@ -1,87 +1,25 @@
 import sys
 import gi
+import os
 
 gi.require_version('Gio', '2.0')
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 
 from gi.repository import Gtk, Adw, Gio, Gdk, GLib
-import os
-
-MENU_XML="""
-<?xml version="1.0" encoding="UTF-8"?>
-<interface>
-  <menu id="hamburger-menu">
-    <section>
-      <item>
-        <attribute name="action">win.toggle_wrap</attribute>
-        <attribute name="label" translatable="yes">Wrap Text</attribute>
-      </item>
-      <submenu>
-        <attribute name="label" translatable="yes">Font Size</attribute>
-        <section>
-          <item>
-            <attribute name="action">win.font_size</attribute>
-            <attribute name="target" type="i">14</attribute>
-            <attribute name="label" translatable="no">14px</attribute>
-          </item>
-          <item>
-            <attribute name="action">win.font_size</attribute>
-            <attribute name="target" type="i">16</attribute>
-            <attribute name="label" translatable="no">16px</attribute>
-          </item>
-          <item>
-            <attribute name="action">win.font_size</attribute>
-            <attribute name="target" type="i">18</attribute>
-            <attribute name="label" translatable="no">18px</attribute>
-          </item>
-          <item>
-            <attribute name="action">win.font_size</attribute>
-            <attribute name="target" type="i">20</attribute>
-            <attribute name="label" translatable="no">20px</attribute>
-          </item>
-          <item>
-            <attribute name="action">win.font_size</attribute>
-            <attribute name="target" type="i">22</attribute>
-            <attribute name="label" translatable="no">22px</attribute>
-          </item>
-          <item>
-            <attribute name="action">win.font_size</attribute>
-            <attribute name="target" type="i">24</attribute>
-            <attribute name="label" translatable="no">24px</attribute>
-          </item>
-          <item>
-            <attribute name="action">win.font_size</attribute>
-            <attribute name="target" type="i">26</attribute>
-            <attribute name="label" translatable="no">26px</attribute>
-          </item>
-          <item>
-            <attribute name="action">win.font_size</attribute>
-            <attribute name="target" type="i">28</attribute>
-            <attribute name="label" translatable="no">28px</attribute>
-          </item>
-          <item>
-            <attribute name="action">win.font_size</attribute>
-            <attribute name="target" type="i">30</attribute>
-            <attribute name="label" translatable="no">30px</attribute>
-          </item>
-        </section>
-      </submenu>
-    </section>
-    <section>
-      <item>
-        <attribute name="action">win.about</attribute>
-        <attribute name="label" translatable="yes">About texty</attribute>
-      </item>
-    </section>
-  </menu>
-</interface>
-"""
 
 class TextyWindow(Adw.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         __gtype_name__ = "TextyWindow"
+
+        # Load the UI file
+        builder = Gtk.Builder()
+        builder.add_from_file(os.path.join(os.path.dirname(__file__), "data", "shortcuts.ui"))
+        # builder.template(os.path.join(os.path.dirname(__file__), "data", "window.ui"))
+        
+        self.shortcuts_window = builder.get_object("shortcuts_window")
+        self.set_help_overlay(self.shortcuts_window)
 
         # preferences
         self.settings = Gio.Settings.new("ca.footeware.py.texty")
@@ -91,13 +29,15 @@ class TextyWindow(Adw.ApplicationWindow):
         height = self.settings.get_int("window-height")
         self.set_default_size(width, height)
 
-        # add path to icons to default icon theme
+        # add path to icon to default icon theme
         icon_dir = os.path.join(os.path.dirname(__file__), 'data', 'icons', 'hicolor', 'scalable', 'apps')
         icon_theme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
         icon_theme.add_search_path(icon_dir)
 
+        # create the header bar
         header = Adw.HeaderBar()
 
+        # Save button
         save_button = Adw.SplitButton(label="Save")
         save_action = Gio.SimpleAction.new("save", None)
         save_action.connect("activate", self.on_save_action_activated)
@@ -142,12 +82,9 @@ class TextyWindow(Adw.ApplicationWindow):
 
         hamburger_menu = Gtk.MenuButton.new()
         hamburger_menu.set_icon_name("open-menu-symbolic")
-        menu = Gtk.Builder.new_from_string(MENU_XML, -1).get_object("hamburger-menu")
-        hamburger_menu.set_menu_model(menu)
-        
-        about_action = Gio.SimpleAction.new("about", None) # look at MENU_XML win.about
-        about_action.connect("activate", self.on_about_action_activated)
-        self.add_action(about_action) # (self window) == win in MENU_XML
+        builder.add_from_file(os.path.join(os.path.dirname(__file__), "data", "menu.ui"))
+        menu_model = builder.get_object("hamburger-menu")
+        hamburger_menu.set_menu_model(menu_model)
 
         toggle_wrap_action = Gio.SimpleAction.new_stateful("toggle_wrap", 
                                                            None, 
@@ -164,6 +101,15 @@ class TextyWindow(Adw.ApplicationWindow):
         font_size_action.connect("change-state", self.on_font_size_action_changed)
         font_size_action.set_state(GLib.Variant.new_int32(font_size))
         self.add_action(font_size_action)
+
+        show_shortcuts_action = Gio.SimpleAction.new("show_shortcuts", None)
+        show_shortcuts_action.connect("activate", self.on_show_shortcuts_action_activated)
+        self.get_application().set_accels_for_action("win.show_shortcuts", ["<Ctrl>question"])
+        self.add_action(show_shortcuts_action)
+
+        about_action = Gio.SimpleAction.new("about", None)
+        about_action.connect("activate", self.on_about_action_activated)
+        self.add_action(about_action)
 
         header.pack_end(hamburger_menu)
 
@@ -201,6 +147,9 @@ class TextyWindow(Adw.ApplicationWindow):
         self.connect("close-request", self.on_close_request)
 
         self.text_view.grab_focus()
+
+    def on_show_shortcuts_action_activated(self, action, param=None):
+        self.shortcuts_window.present()
     
     def on_close_request(self, window):
         width = self.get_width()

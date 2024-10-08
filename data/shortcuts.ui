@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <object class="GtkShortcutsWindow" id="shortcuts_window">
+    <property name="modal">True</property>
+    <child>
+      <object class="GtkShortcutsSection" id="section">
+        <child>
+          <object class="GtkShortcutsShortcut" id="shortcut">
+            <property name="title">Wrap Text</property>
+            <property name="accelerator">&lt;Shift&gt;&lt;Ctrl&gt;w</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
